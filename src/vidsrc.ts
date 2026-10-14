@@ -13,6 +13,17 @@ import { decrypt } from "./helpers/decoder.js";
 
 let BASEDOM = "https://whisperingauroras.com";
 
+async function fetchUpstream(url: string, options: RequestInit = {}) {
+  try {
+    const response = await fetch(url, { ...options, signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response;
+  } catch (cause) {
+    const endpoint = new URL(url);
+    throw new Error(`Upstream request failed: ${endpoint.origin}${endpoint.pathname}`, { cause });
+  }
+}
+
 interface Servers {
   name: string | null;
   dataHash: string | null;
@@ -51,14 +62,14 @@ async function serversLoad(html: string): Promise<{ servers: Servers[]; title: s
 async function SRCRCPhandler() {
 }
 async function PRORCPhandler(prorcp: string): Promise<string | null> {
-  const prorcpFetch = await fetch(`${BASEDOM}/prorcp/${prorcp}`);
+  const prorcpFetch = await fetchUpstream(`${BASEDOM}/prorcp/${prorcp}`);
   const prorcpResponse = await prorcpFetch.text();
 
   const scripts = prorcpResponse.match(/<script\s+src="\/([^"]*\.js)\?\_=([^"]*)"><\/script>/gm);
   const script = (scripts?.[scripts.length - 1].includes("cpt.js"))
     ? scripts?.[scripts.length - 2].replace(/.*src="\/([^"]*\.js)\?\_=([^"]*)".*/, "$1?_=$2")
     : scripts?.[scripts.length - 1].replace(/.*src="\/([^"]*\.js)\?\_=([^"]*)".*/, "$1?_=$2");
-  const jsFileReq = await fetch(
+  const jsFileReq = await fetchUpstream(
     `${BASEDOM}/${script}`,
     {
       "headers": {
@@ -108,14 +119,14 @@ async function tmdbScrape(tmdbId: string, type: "movie" | "tv", season?: number,
   const url = (type === "movie")
     ? `https://vidsrc.net/embed/${type}?tmdb=${tmdbId}`
     : `https://vidsrc.net/embed/${type}?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
-  const embed = await fetch(url);
+  const embed = await fetchUpstream(url);
   const embedResp = await embed.text();
 
   // get some metadata
   const { servers, title } = await serversLoad(embedResp);
 
   const rcpFetchPromises = servers.map(element => {
-    return fetch(`${BASEDOM}/rcp/${element.dataHash}`);
+    return fetchUpstream(`${BASEDOM}/rcp/${element.dataHash}`);
   });
   const rcpResponses = await Promise.all(rcpFetchPromises);
 

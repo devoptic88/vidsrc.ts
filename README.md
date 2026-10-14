@@ -20,6 +20,13 @@ detects the build and start scripts automatically. The server listens on
 Set the Railway healthcheck path to `/health`. Deploy from this repository's
 root directory. Commit `package-lock.json` alongside the source changes.
 
+Use `npm start` so the TLS bootstrap loads the bundled, authenticated Let's
+Encrypt cross-certificate before the server starts. This repairs the observed
+incomplete upstream chain while retaining HTTPS certificate verification.
+Commit `tls-bootstrap.js` and the `certs` directory as well. No Railway TLS
+environment variable is required. See `certs/README.md` for provenance and expiry.
+Upstream requests time out after 15 seconds; failures log the endpoint and cause.
+
 - `GET /` lists the available endpoints.
 - `GET /health` checks service readiness without contacting upstream sites.
 - `GET /api?tmdbId=76479&type=tv&season=1&episode=1` extracts a TV episode.

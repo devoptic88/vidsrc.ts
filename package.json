@@ -6,7 +6,7 @@
   "engines": { "node": "24.x" },
   "scripts": {
     "build": "tsc --noEmit false --rootDir src --outDir dist",
-    "start": "node server.js"
+    "start": "node --import ./tls-bootstrap.js server.js"
   },
   "dependencies": {
     "cheerio": "^1.0.0"
