@@ -2,6 +2,12 @@
   "name": "vidsrc.extractor.module",
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "npm@11.16.0",
+  "engines": { "node": "24.x" },
+  "scripts": {
+    "build": "tsc --noEmit false --rootDir src --outDir dist",
+    "start": "node server.js"
+  },
   "dependencies": {
     "cheerio": "^1.0.0"
   },
